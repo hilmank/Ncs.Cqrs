@@ -43,7 +43,7 @@ namespace Ncs.Cqrs.Application.Features.Orders.Validators
             return !await _unitOfWork.Orders.HasOrderForDateAsync(userId, DateTime.Now.Date);
         }
 
-        private async Task<bool> GuestsBelongToUser(List<int> reservationGuestsIds, CancellationToken cancellationToken)
+        private async Task<bool> GuestsBelongToUser(List<int>? reservationGuestsIds, CancellationToken cancellationToken)
         {
             var userId = GetCurrentUserId();
             var reservationGuests = await _unitOfWork.Reservations.GetUserReservationByDateAsync(userId, DateTime.Now.Date);

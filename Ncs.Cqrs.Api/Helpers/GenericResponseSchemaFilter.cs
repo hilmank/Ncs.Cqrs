@@ -82,7 +82,7 @@ namespace Ncs.Cqrs.Api.Helpers
                 var underlyingType = Nullable.GetUnderlyingType(itemType);
                 return new OpenApiSchema
                 {
-                    Type = GetOpenApiType(underlyingType),
+                    Type = underlyingType != null ? GetOpenApiType(underlyingType) : "string",
                     Nullable = true
                 };
             }

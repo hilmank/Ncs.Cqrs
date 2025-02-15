@@ -40,8 +40,7 @@ namespace Ncs.Cqrs.Api.Controllers
             var result = await _mediator.Send(new GetOrdersInfoQuery());
             return result.Success ? Ok(result) : HandleErrorResponse(result);
         }
-        /// <summary>
-        /// Create new orders for the authenticated user.
+        /// <summary> Create new orders for the authenticated user. </summary>
         [HttpPost]
         [SwaggerOperation(
             Summary = "Create Orders",

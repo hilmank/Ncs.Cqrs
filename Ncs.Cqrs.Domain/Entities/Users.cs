@@ -56,7 +56,7 @@ namespace Ncs.Cqrs.Domain.Entities
         public string GuestCompanyName { get; set; }
 
         [Column("rfid_tag")]
-        public string RfidTag { get; set; }
+        public string? RfidTag { get; set; }
 
         [Required]
         [Column("is_active")]
