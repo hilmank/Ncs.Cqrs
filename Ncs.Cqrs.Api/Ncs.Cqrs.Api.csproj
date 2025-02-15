@@ -6,8 +6,23 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
-  <ItemGroup>
+<PropertyGroup>
+	    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+	    <NoWarn>$(NoWarn);1591</NoWarn>
+    </PropertyGroup>
+  
+	<ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.13" />
+    <PackageReference Include="Serilog" Version="4.2.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ncs.Cqrs.Application\Ncs.Cqrs.Application.csproj" />
+    <ProjectReference Include="..\Ncs.Cqrs.Common\Ncs.Cqrs.Common.csproj" />
+    <ProjectReference Include="..\Ncs.Cqrs.Domain\Ncs.Cqrs.Domain.csproj" />
+    <ProjectReference Include="..\Ncs.Cqrs.Infrastructure\Ncs.Cqrs.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
