@@ -59,7 +59,7 @@ namespace Ncs.Cqrs.Api.Controllers
             var result = await _mediator.Send(command);
             return result.Success ? Ok(result) : HandleErrorResponse(result);
         }
-        [HttpGet("date")]
+        [HttpGet("today")]
         [SwaggerOperation(
             Summary = "Get current date orders",
             Description = "Retrieves orders today"
@@ -67,6 +67,37 @@ namespace Ncs.Cqrs.Api.Controllers
         public async Task<ActionResult<ResponseDto<IEnumerable<OrdersDto>>>> GetOrdersToday()
         {
             var query = new GetOrdersByDateQuery { StartDate = DateTime.Now.Date, EndDate = DateTime.Now.Date };
+            var result = await _mediator.Send(query);
+            return result.Success ? Ok(result) : HandleErrorResponse(result);
+        }
+        [HttpGet("date")]
+        [SwaggerOperation(
+            Summary = "Get orders by date",
+            Description = "Retrieves orders by date"
+        )]
+        public async Task<ActionResult<ResponseDto<IEnumerable<OrdersDto>>>> GetOrdersByDate(string startDate, string endDate)
+        {
+            if (string.IsNullOrEmpty(startDate))
+            {
+                startDate = $"{DateTime.Now.Year}-01-01";
+            }
+            if (string.IsNullOrEmpty(endDate))
+            {
+                endDate = $"{DateTime.Now.Year}-12-31";
+            }
+            if (!DateTime.TryParse(startDate, out var parsedStartDate))
+            {
+                return BadRequest("Invalid start date format. Please provide a valid date (YYYY-MM-DD).");
+            }
+            if (!DateTime.TryParse(endDate, out var parsedEndDate))
+            {
+                return BadRequest("Invalid end date format. Please provide a valid date (YYYY-MM-DD).");
+            }
+            var query = new GetOrdersByDateQuery
+            {
+                StartDate = parsedStartDate,
+                EndDate = parsedEndDate
+            };
             var result = await _mediator.Send(query);
             return result.Success ? Ok(result) : HandleErrorResponse(result);
         }
