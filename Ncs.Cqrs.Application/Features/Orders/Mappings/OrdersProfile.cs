@@ -22,6 +22,7 @@ namespace Ncs.Cqrs.Application.Features.Orders.Mappings
                 .ForMember(dest => dest.ReservationsId, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.MenuItem.Name))
                 ;
+            CreateMap<Domain.Entities.ReservationGuests, ReservationGuestsDto>();
             CreateMap<Domain.Entities.ReservationGuests, OrdersInfoReservationGuestsDto>()
                 .ForMember(dest => dest.ReservationGuestsId, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.MenuItem.Name))

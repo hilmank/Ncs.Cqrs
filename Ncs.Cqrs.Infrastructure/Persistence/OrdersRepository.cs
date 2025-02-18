@@ -53,9 +53,12 @@ namespace Ncs.Cqrs.Infrastructure.Persistence
                         existingOrder.Reservation = reservation;
                         if (reservation is not null)
                         {
-                            existingOrder.Reservation.Status = reservationsStatus;
-                            existingOrder.ReservationGuests = reservationGuest;
-                            existingOrder.ReservationGuests.MenuItem = guestMenuItem;
+                            if (order.ReservationGuestsId is not null)
+                            {
+                                existingOrder.Reservation.Status = reservationsStatus;
+                                existingOrder.ReservationGuests = reservationGuest;
+                                existingOrder.ReservationGuests.MenuItem = guestMenuItem;
+                            }
                         }
                         resultDictionary[order.Id] = existingOrder;
                     }
