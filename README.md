@@ -53,4 +53,6 @@ dotnet run --project Ncs.Cqrs.Api
 Swagger UI is available at:  
 ```
 http://localhost:5000/swagger
+![Screenshot_19-2-2025_02222_localhost](https://github.com/user-attachments/assets/b7e07496-1aa3-4b6a-8641-7680816657cc)
+
 ```
