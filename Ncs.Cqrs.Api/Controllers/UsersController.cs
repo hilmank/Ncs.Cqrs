@@ -3,7 +3,6 @@ using Ncs.Cqrs.Application.Common.DTOs;
 using Ncs.Cqrs.Application.Features.Users.Commands;
 using Ncs.Cqrs.Application.Features.Users.DTOs;
 using Ncs.Cqrs.Application.Features.Users.Queries;
-using Ncs.Cqrs.Domain.Constants;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
@@ -16,136 +15,132 @@ namespace Ncs.Cqrs.Api.Controllers
         private readonly IMediator _mediator;
         private readonly IMapper _mapper;
 
-        public UsersController(IMediator mediator, IMapper mapper, IHttpContextAccessor httpContextAccessor)
-           : base(httpContextAccessor)
+        public UsersController(
+            IMediator mediator,
+            IMapper mapper,
+            IHttpContextAccessor httpContextAccessor,
+            ILogger<MastersController> logger)
+           : base(httpContextAccessor, logger)
         {
             _mediator = mediator;
             _mapper = mapper;
         }
 
-        /// <summary> Retrieve all users. </summary>
         [HttpGet]
+        [SwaggerOperation(Summary = "Retrieve all users", Description = "Gets all users from the system.")]
         public async Task<ActionResult<ResponseDto<IEnumerable<UsersDto>>>> GetAllUsers()
-        {
-            var result = await _mediator.Send(new GetUsersByParamQuery());
-            return result.Success ? Ok(result) : HandleErrorResponse(result);
-        }
+            => await HandleRequestAsync(
+                async () => await _mediator.Send(new GetUsersByParamQuery()),
+                "Error fetching all users"
+            );
 
-        /// <summary> Retrieve a user by ID. </summary>
         [HttpGet("{id}")]
+        [SwaggerOperation(Summary = "Retrieve a user by ID", Description = "Gets a specific user by ID.")]
         public async Task<ActionResult<ResponseDto<UsersDto>>> GetUserById(int id)
-        {
-            var result = await _mediator.Send(new GetUsersByIdQuery { Id = id });
-            return result.Success ? Ok(result) : HandleErrorResponse(result);
-        }
+            => await HandleRequestAsync(
+                async () => await _mediator.Send(new GetUsersByIdQuery { Id = id }),
+                $"Error fetching user with ID {id}"
+            );
 
-        /// <summary> Retrieve users by role. </summary>
         [HttpGet("roles/{roleId}")]
+        [SwaggerOperation(Summary = "Retrieve users by role", Description = "Gets users associated with a specific role.")]
         public async Task<ActionResult<ResponseDto<IEnumerable<UsersDto>>>> GetUsersByRole(int roleId)
-        {
-            var result = await _mediator.Send(new GetUsersByParamQuery { RolesId = roleId });
-            return result.Success ? Ok(result) : HandleErrorResponse(result);
-        }
+            => await HandleRequestAsync(
+                async () => await _mediator.Send(new GetUsersByParamQuery { RolesId = roleId }),
+                $"Error fetching users for role ID {roleId}"
+            );
 
-        /// <summary> Retrieve users by company. </summary>
         [HttpGet("company/{companyId}")]
+        [SwaggerOperation(Summary = "Retrieve users by company", Description = "Gets users associated with a specific company.")]
         public async Task<ActionResult<ResponseDto<IEnumerable<UsersDto>>>> GetUsersByCompany(int companyId)
-        {
-            var result = await _mediator.Send(new GetUsersByParamQuery { CompanyId = companyId });
-            return result.Success ? Ok(result) : HandleErrorResponse(result);
-        }
+            => await HandleRequestAsync(
+                async () => await _mediator.Send(new GetUsersByParamQuery { CompanyId = companyId }),
+                $"Error fetching users for company ID {companyId}"
+            );
 
-        /// <summary> Retrieve users by status. </summary>
         [HttpGet("status/{isActive}")]
+        [SwaggerOperation(Summary = "Retrieve users by status", Description = "Gets active or inactive users.")]
         public async Task<ActionResult<ResponseDto<IEnumerable<UsersDto>>>> GetUsersByStatus(bool isActive)
-        {
-            var result = await _mediator.Send(new GetUsersByParamQuery { IsAcvtive = isActive });
-            return result.Success ? Ok(result) : HandleErrorResponse(result);
-        }
+            => await HandleRequestAsync(
+                async () => await _mediator.Send(new GetUsersByParamQuery { IsAcvtive = isActive }),
+                $"Error fetching users with status {isActive}"
+            );
 
-        /// <summary> Retrieve a user by RFID tag. </summary>
         [HttpGet("rfid/{rfidTag}")]
+        [SwaggerOperation(Summary = "Retrieve a user by RFID tag", Description = "Gets a user using their RFID tag.")]
         public async Task<ActionResult<ResponseDto<UsersDto>>> GetUserByRfidTag(string rfidTag)
-        {
-            var result = await _mediator.Send(new GetUsersByrfidtTagQuery { RfidTag = rfidTag });
-            return result.Success ? Ok(result) : HandleErrorResponse(result);
-        }
+            => await HandleRequestAsync(
+                async () => await _mediator.Send(new GetUsersByrfidtTagQuery { RfidTag = rfidTag }),
+                $"Error fetching user with RFID tag {rfidTag}"
+            );
 
-        /// <summary> Retrieve a user by username. </summary>
         [HttpGet("by-username")]
+        [SwaggerOperation(Summary = "Retrieve a user by username", Description = "Gets a user by their username.")]
         public async Task<ActionResult<ResponseDto<UsersDto>>> GetUserByUsername([FromQuery] string username)
-        {
-            var result = await _mediator.Send(new GetUsersByUsernameOrEmailQuery { UsernameOrEmail = username });
-            return result.Success ? Ok(result) : HandleErrorResponse(result);
-        }
+            => await HandleRequestAsync(
+                async () => await _mediator.Send(new GetUsersByUsernameOrEmailQuery { UsernameOrEmail = username }),
+                $"Error fetching user with username {username}"
+            );
 
-        /// <summary> Retrieve a user by email. </summary>
         [HttpGet("by-email")]
+        [SwaggerOperation(Summary = "Retrieve a user by email", Description = "Gets a user by their email address.")]
         public async Task<ActionResult<ResponseDto<UsersDto>>> GetUserByEmail([FromQuery] string email)
-        {
-            var result = await _mediator.Send(new GetUsersByUsernameOrEmailQuery { UsernameOrEmail = email });
-            return result.Success ? Ok(result) : HandleErrorResponse(result);
-        }
+            => await HandleRequestAsync(
+                async () => await _mediator.Send(new GetUsersByUsernameOrEmailQuery { UsernameOrEmail = email }),
+                $"Error fetching user with email {email}"
+            );
 
-        /// <summary> Create a new user. </summary>
         [HttpPost]
         [SwaggerOperation(Summary = "Create a new user", Description = "Registers a new user in the system.")]
         public async Task<ActionResult<ResponseDto<bool>>> CreateUser([FromBody] CreateUsersDto data)
-        {
-            var result = await _mediator.Send(_mapper.Map<CreateUsersCommand>(data));
-            return result.Success ? Ok(result) : HandleErrorResponse(result);
-        }
+            => await HandleRequestAsync(
+                async () => await _mediator.Send(_mapper.Map<CreateUsersCommand>(data)),
+                "Error creating user"
+            );
 
-        /// <summary> Update an existing user. </summary>
         [HttpPut("{id}")]
         [SwaggerOperation(Summary = "Update a user", Description = "Updates user information.")]
         public async Task<ActionResult<ResponseDto<bool>>> UpdateUser(int id, [FromBody] UpdateUsersDto data)
-        {
-            var command = _mapper.Map<UpdateUsersCommand>(data);
-            command.Id = id;
-            var result = await _mediator.Send(command);
-            return result.Success ? Ok(result) : HandleErrorResponse(result);
-        }
+            => await HandleRequestAsync(
+                async () =>
+                {
+                    var command = _mapper.Map<UpdateUsersCommand>(data);
+                    command.Id = id;
+                    return await _mediator.Send(command);
+                },
+                $"Error updating user with ID {id}"
+            );
 
-        /// <summary> Delete a user by ID. </summary>
         [HttpDelete("{id}")]
+        [SwaggerOperation(Summary = "Delete a user by ID", Description = "Removes a user from the system.")]
         public async Task<ActionResult<ResponseDto<bool>>> DeleteUser(int id)
-        {
-            var result = await _mediator.Send(new DeleteUsersCommand { Id = id });
-            return result.Success ? Ok(result) : HandleErrorResponse(result);
-        }
-        /// <summary> 
-        /// Activates a user by setting their status to active.
-        /// </summary>
-        /// <param name="id">The ID of the user to activate.</param>
-        /// <param name="rfidTag">The RFID tag assigned to the user. Required when activating.</param>
-        /// <returns>Returns a success response if the user is activated, otherwise an error response.</returns>
+            => await HandleRequestAsync(
+                async () => await _mediator.Send(new DeleteUsersCommand { Id = id }),
+                $"Error deleting user with ID {id}"
+            );
+
         [HttpPut("activate/{id}")]
         [SwaggerOperation(Summary = "Activate a user", Description = "Sets the user's status to active.")]
         public async Task<ActionResult<ResponseDto<bool>>> ActivateUser(int id, string rfidTag)
-        {
-            var command = new ChangeUsersStatusCommand { Id = id, RfidTag = rfidTag, IsActive = true };
-            var result = await _mediator.Send(command);
-            return result.Success ? Ok(result) : HandleErrorResponse(result);
-        }
+            => await HandleRequestAsync(
+                async () => await _mediator.Send(new ChangeUsersStatusCommand { Id = id, RfidTag = rfidTag, IsActive = true }),
+                $"Error activating user with ID {id}"
+            );
 
-        /// <summary> Deactivate a user. </summary>
         [HttpPut("deactivate/{id}")]
         [SwaggerOperation(Summary = "Deactivate a user", Description = "Sets the user's status to inactive.")]
         public async Task<ActionResult<ResponseDto<bool>>> DeactivateUser(int id)
-        {
-            var command = new ChangeUsersStatusCommand { Id = id, IsActive = false };
-            var result = await _mediator.Send(command);
-            return result.Success ? Ok(result) : HandleErrorResponse(result);
-        }
+            => await HandleRequestAsync(
+                async () => await _mediator.Send(new ChangeUsersStatusCommand { Id = id, IsActive = false }),
+                $"Error deactivating user with ID {id}"
+            );
 
-        /// <summary> Changes the user's password. </summary>
         [HttpPost("change-password")]
+        [SwaggerOperation(Summary = "Change a user's password", Description = "Updates a user's password.")]
         public async Task<ActionResult<ResponseDto<bool>>> ChangePassword([FromBody] ChangePasswordDto data)
-        {
-            var command = _mapper.Map<ChangePasswordCommand>(data);
-            var result = await _mediator.Send(command);
-            return result.Success ? Ok(result) : HandleErrorResponse(result);
-        }
+            => await HandleRequestAsync(
+                async () => await _mediator.Send(_mapper.Map<ChangePasswordCommand>(data)),
+                "Error changing password"
+            );
     }
 }

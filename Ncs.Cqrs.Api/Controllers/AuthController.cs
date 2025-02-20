@@ -5,16 +5,19 @@ using Ncs.Cqrs.Domain.Constants;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Ncs.Cqrs.Api.Controllers
 {
     [Route("api/auth")]
     [ApiController]
-    public class AuthController : ControllerBase
+    public class AuthController : BaseApiController
     {
         private readonly IMediator _mediator;
 
-        public AuthController(IMediator mediator)
+        public AuthController(IMediator mediator, IHttpContextAccessor httpContextAccessor, ILogger<MastersController> logger)
+            : base(httpContextAccessor, logger)
         {
             _mediator = mediator;
         }
@@ -22,37 +25,37 @@ namespace Ncs.Cqrs.Api.Controllers
         /// <summary>
         /// Authenticates a user and generates a JWT token.
         /// </summary>
-        [SwaggerOperation(Summary = "Authenticates a user and generates a JWT token.", Description = "Authenticates a user using their username/email and password, returning a JWT token.")]
+        [AllowAnonymous]
+        [HttpPost("login")]
+        [SwaggerOperation(
+            Summary = "Authenticates a user and generates a JWT token.",
+            Description = "Authenticates a user using their username/email and password, returning a JWT token."
+        )]
         [SwaggerResponse(200, "User successfully authenticated.", typeof(ResponseDto<SigninDto>))]
         [SwaggerResponse(400, "Invalid login credentials.")]
         [SwaggerResponse(500, "Internal server error.")]
-        [HttpPost("login")]
         public async Task<ActionResult<ResponseDto<SigninDto>>> UserSignIn([FromBody] UserLoginCommand request)
-        {
-            var result = await _mediator.Send(request);
-
-            if (!result.Success)
-                return BadRequest(ResponseDto<SigninDto>.ErrorResponse(ErrorCodes.InvalidInput, result.MessageDetail));
-
-            return Ok(result);
-        }
+            => await HandleRequestAsync(
+                async () => await _mediator.Send(request),
+                "Error during user login"
+            );
 
         /// <summary>
         /// Authenticates a user using an RFID card.
         /// </summary>
-        [SwaggerOperation(Summary = "Authenticates a user using an RFID card.", Description = "Authenticates a user using their RFID card ID, returning authentication details.")]
+        [AllowAnonymous]
+        [HttpPost("rfid-login")]
+        [SwaggerOperation(
+            Summary = "Authenticates a user using an RFID card.",
+            Description = "Authenticates a user using their RFID card ID, returning authentication details."
+        )]
         [SwaggerResponse(200, "RFID successfully authenticated.", typeof(ResponseDto<SigninDto>))]
         [SwaggerResponse(400, "Validation failed.")]
         [SwaggerResponse(401, "Unauthorized if the RFID card is not registered.")]
-        [HttpPost("rfid-login")]
         public async Task<ActionResult<ResponseDto<SigninDto>>> RfidLogin([FromBody] RfidLoginCommand request)
-        {
-            var result = await _mediator.Send(request);
-
-            if (!result.Success)
-                return BadRequest(ResponseDto<SigninDto>.ErrorResponse(ErrorCodes.InvalidInput, result.MessageDetail));
-
-            return Ok(result);
-        }
+            => await HandleRequestAsync(
+                async () => await _mediator.Send(request),
+                "Error during RFID login"
+            );
     }
 }

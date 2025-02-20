@@ -1,18 +1,23 @@
-# NCS Cqrs API 🏪🍽️  
-**CQRS-based REST API using .NET 8, Dapper, and MediatR**  
+# 🏢 NCS Cqrs API
+
+**CQRS-based REST API using .NET 8, Dapper, and MediatR**
 
 ## 🔥 Overview  
 NCS Cqrs API is a high-performance **REST API** designed using **CQRS (Command Query Responsibility Segregation)** with **.NET 8**. The API handles **meal reservations, menu management, stock tracking, and order processing** with robust authentication and auditing.
 
+---
+
 ## 🚀 Features  
-✅ **CQRS Architecture** – Implements **MediatR** for clear separation of commands and queries  
-✅ **Dapper for Data Access** – Optimized SQL queries for fast database interactions  
-✅ **Authentication & Authorization** – Secure JWT-based authentication with refresh token support  
-✅ **FluentValidation** – Input validation for reliable API requests  
-✅ **AutoMapper** – Efficient DTO mapping for better maintainability  
-✅ **Serilog Logging** – Centralized structured logging for debugging and analytics  
-✅ **NPOI for Excel Reporting** – Export order and payment reports in Excel format  
-✅ **Audit Logging** – Tracks changes for accountability  
+- ✅ **CQRS Architecture** – Implements **MediatR** for clear separation of commands and queries  
+- ✅ **Dapper for Data Access** – Optimized SQL queries for fast database interactions  
+- ✅ **Authentication & Authorization** – Secure JWT-based authentication with refresh token support  
+- ✅ **FluentValidation** – Input validation for reliable API requests  
+- ✅ **AutoMapper** – Efficient DTO mapping for better maintainability  
+- ✅ **Serilog Logging** – Centralized structured logging for debugging and analytics  
+- ✅ **NPOI for Excel Reporting** – Export order and payment reports in Excel format  
+- ✅ **Audit Logging** – Tracks changes for accountability  
+
+---
 
 ## 🛠️ Tech Stack  
 - **Backend:** .NET 8, C#, ASP.NET Core Web API  
@@ -24,6 +29,8 @@ NCS Cqrs API is a high-performance **REST API** designed using **CQRS (Command Q
 - **Validation:** FluentValidation  
 - **Documentation:** Swashbuckle (Swagger)  
 
+---
+
 ## 📂 Project Structure  
 ```
 📦 Ncs.Cqrs
@@ -34,7 +41,9 @@ NCS Cqrs API is a high-performance **REST API** designed using **CQRS (Command Q
  ├── 📂 Ncs.Cqrs.Common       # Shared utilities and constants
 ```
 
-## ⚡ Getting Started  
+---
+
+## 🚀 Getting Started  
 1️⃣ **Clone the repository:**  
 ```sh
 git clone https://github.com/yourusername/Ncs.Cqrs.git
@@ -49,10 +58,98 @@ cd Ncs.Cqrs
 dotnet run --project Ncs.Cqrs.Api
 ```
 
+---
+
 ## 📝 API Documentation  
 Swagger UI is available at:  
 ```
 http://localhost:5000/swagger
-![Screenshot_19-2-2025_02222_localhost](https://github.com/user-attachments/assets/b7e07496-1aa3-4b6a-8641-7680816657cc)
-
 ```
+
+---
+
+# 🛠️ Error Handling in NCS Cqrs API
+
+NCS Cqrs API implements a **centralized error handling mechanism** to ensure consistency and maintainability. This architecture ensures that all errors are **caught, logged, and returned with a structured response format**.
+
+---
+
+## 📌 Error Handling Architecture (Mechanism)
+
+The API follows a **layered architecture** to handle errors efficiently:  
+
+### **🔹 1. Error Occurs in Any Layer**
+   - **Business Logic Layer (Application Services)**
+   - **Database Layer (Dapper Queries)**
+   - **External Services (e.g., RFID readers, Payment Gateway)**
+   - **Middleware (Authentication & Authorization)**
+
+### **🔹 2. Exception is Thrown**
+   - If an **exception occurs**, it is caught in the `HandleRequestAsync<T>` method inside `BaseApiController`.
+
+### **🔹 3. Exception is Logged**
+   - The error message, stack trace, and request details (if available) are logged using **Serilog**.
+   - **Sensitive data (e.g., passwords, tokens) are never logged**.
+
+### **🔹 4. API Returns a Standardized Error Response**
+   - **HTTP Status Code** is set based on the error type.
+   - **JSON Response** follows a consistent format with an `errorCode`, `message`, and `messageDetail`.
+
+---
+
+## 📈 Error Handling Flow Diagram
+```
+[API Request] --> [Controller] --> [Service Layer] --> [Database / External Service]
+                    |                   |
+                    |                   |
+                    V                   V
+              [Exception Occurs]  --> [Exception Thrown]
+                    |
+                    V
+        [HandleRequestAsync<T> in BaseApiController]
+                    |
+                    V
+      [Log Error (Serilog)]  -->  [Return JSON Response]
+```
+
+---
+
+## 👌 Standard API Response Format
+
+#### **🔹 Success Response**
+```json
+{
+  "success": true,
+  "errorCode": null,
+  "message": "Data retrieved successfully.",
+  "messageDetail": null,
+  "data": { }
+}
+```
+
+#### **🔹 Error Response**
+```json
+{
+  "success": false,
+  "errorCode": "NotFound",
+  "message": "The requested resource was not found.",
+  "messageDetail": "No menu item found with ID 123.",
+  "data": null
+}
+```
+
+---
+
+## 🚀 How to Test Error Handling
+- **Invalid Requests:** Send requests with missing or incorrect parameters.
+- **Unauthorized Requests:** Call a protected endpoint without a valid token.
+- **Database Errors:** Request a non-existing record.
+
+---
+
+## 🔒 Summary
+- **Centralized error handling ensures consistency** ✅
+- **All exceptions are logged with request details** ✅
+- **Sensitive data is never logged** ✅
+- **Predefined error codes improve API debugging** ✅
+

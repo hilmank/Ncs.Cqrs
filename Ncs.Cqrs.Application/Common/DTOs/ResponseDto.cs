@@ -15,13 +15,14 @@ namespace Ncs.Cqrs.Application.Common.DTOs
             return new ResponseDto<T> { Success = true, Data = data, Message = message, MessageDetail = null };
         }
 
-        public static ResponseDto<T> ErrorResponse(ErrorCodes errorCode, string? messageDetail)
+        public static ResponseDto<T> ErrorResponse(ErrorCodes? errorCode, string? messageDetail)
         {
+
             return new ResponseDto<T>
             {
                 Success = false,
-                ErrorCode = ErrorMessages.GetCode(errorCode),
-                Message = ErrorMessages.GetMessage(errorCode),
+                ErrorCode = errorCode.HasValue ? ErrorMessages.GetCode(errorCode.Value) : null,
+                Message = errorCode.HasValue ? ErrorMessages.GetMessage(errorCode.Value) : null,
                 MessageDetail = messageDetail,
                 Data = default
             };

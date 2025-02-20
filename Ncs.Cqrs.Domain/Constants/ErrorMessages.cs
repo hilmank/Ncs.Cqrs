@@ -2,46 +2,35 @@
 {
     public static class ErrorMessages
     {
-        private static readonly Dictionary<ErrorCodes, string> Messages = new()
+        private static readonly Dictionary<ErrorCodes, (string Code, string Message)> Errors = new()
         {
-            { ErrorCodes.Unauthorized, "Unauthorized request." },
-            { ErrorCodes.AccessDenied, "Access denied." },
-            { ErrorCodes.NotFound, "Resource not found." },
-            { ErrorCodes.InvalidInput, "Invalid input parameters." },
-            { ErrorCodes.RFIDNotDetected, "RFID card not detected. Please scan again." },
-            { ErrorCodes.RFIDInvalid, "Invalid RFID card. Please contact admin." },
-            { ErrorCodes.PaymentFailed, "Payment processing failed. Try again." },
-            { ErrorCodes.MenuUnavailable, "Selected item is out of stock." },
-            { ErrorCodes.CreateFailed, "Failed to create resource. Please try again." },
-            { ErrorCodes.UpdateFailed, "Failed to update resource. Please try again." },
-            { ErrorCodes.DeleteFailed, "Failed to delete resource. Please try again." },
-            { ErrorCodes.DuplicateData, "The data you are trying to insert already exists." },
-            { ErrorCodes.DatabaseError, "Database operation failed. Please try again." },
-            { ErrorCodes.UnexpectedError, "An unexpected error occurred. Contact support." }
+            { ErrorCodes.Unauthorized, ("401-01", "Unauthorized request.") },
+            { ErrorCodes.AccessDenied, ("403-01", "Access denied.") },
+            { ErrorCodes.NotFound, ("404-01", "Resource not found.") },
+            { ErrorCodes.InvalidInput, ("400-V01", "Invalid input parameters.") },
+            { ErrorCodes.RFIDNotDetected, ("404-R01", "RFID card not detected. Please scan again.") },
+            { ErrorCodes.RFIDInvalid, ("400-R02", "Invalid RFID card. Please contact admin.") },
+            { ErrorCodes.PaymentFailed, ("400-P01", "Payment processing failed. Try again.") },
+            { ErrorCodes.MenuUnavailable, ("400-M01", "Selected item is out of stock.") },
+            { ErrorCodes.CreateFailed, ("400-C01", "Failed to create resource. Please try again.") },
+            { ErrorCodes.UpdateFailed, ("400-U01", "Failed to update resource. Please try again.") },
+            { ErrorCodes.DeleteFailed, ("400-D01", "Failed to delete resource. Please try again.") },
+            { ErrorCodes.DuplicateData, ("400-D02", "The data you are trying to insert already exists.") },
+            { ErrorCodes.DatabaseError, ("500-DB01", "Database operation failed. Please try again.") },
+            { ErrorCodes.UnexpectedError, ("500-S01", "An unexpected error occurred. Contact support.") }
         };
 
         public static string GetMessage(ErrorCodes code) =>
-            Messages.TryGetValue(code, out var message) ? message : "An unknown error occurred.";
-
-        private static readonly Dictionary<ErrorCodes, string> Codes = new()
-        {
-            { ErrorCodes.RFIDInvalid, "400-02" },
-            { ErrorCodes.PaymentFailed, "400-03." },
-            { ErrorCodes.MenuUnavailable, "400-04" },
-            { ErrorCodes.CreateFailed, "400-05" },
-            { ErrorCodes.UpdateFailed, "400-06" },
-            { ErrorCodes.DeleteFailed, "400-07" },
-            { ErrorCodes.DuplicateData, "400-08" },
-            { ErrorCodes.Unauthorized, "401-01" },
-            { ErrorCodes.InvalidInput, "400-01" },
-            { ErrorCodes.AccessDenied, "403-01." },
-            { ErrorCodes.NotFound, "404-01" },
-            { ErrorCodes.RFIDNotDetected, "404-02" },
-            { ErrorCodes.UnexpectedError, "500-01" },
-            { ErrorCodes.DatabaseError, "500-02" },
-        };
+            Errors.TryGetValue(code, out var error) ? error.Message : "An unknown error occurred.";
         public static string GetCode(ErrorCodes code) =>
-            Codes.TryGetValue(code, out var messageCode) ? messageCode : "999-99";
+            Errors.TryGetValue(code, out var error) ? error.Code : "999-99";
+        public static (string Code, string Message) GetErrorDetails(ErrorCodes code) =>
+            Errors.TryGetValue(code, out var error) ? error : ("999-99", "An unknown error occurred.");
 
+        public static ErrorCodes? GetErrorCodeByCode(string code)
+        {
+            var errorEntry = Errors.FirstOrDefault(e => e.Value.Code == code);
+            return errorEntry.Key;
+        }
     }
 }
