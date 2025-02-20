@@ -10,8 +10,9 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Ncs.Cqrs.Api.Controllers
 {
-    [Route("api/auth")]
     [ApiController]
+    [Route("api/v{version:apiVersion}/auth")]
+    [ApiVersion("1.0")]
     public class AuthController : BaseApiController
     {
         private readonly IMediator _mediator;

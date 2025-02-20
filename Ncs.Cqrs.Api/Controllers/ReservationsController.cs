@@ -11,7 +11,9 @@ using System.Globalization;
 
 namespace Ncs.Cqrs.Api.Controllers
 {
-    [Route("api/reservations")]
+    [ApiController]
+    [Route("api/v{version:apiVersion}/reservations")]
+    [ApiVersion("1.0")]
     public class ReservationsController : BaseApiController
     {
         private readonly IMediator _mediator;

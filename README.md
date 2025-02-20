@@ -16,8 +16,9 @@ NCS Cqrs API is a high-performance **REST API** designed using **CQRS (Command Q
 - ✅ **Serilog Logging** – Centralized structured logging for debugging and analytics  
 - ✅ **NPOI for Excel Reporting** – Export order and payment reports in Excel format  
 - ✅ **Audit Logging** – Tracks changes for accountability  
+- ✅ **API Versioning** – Multiple API versions (`v1.0`, `v2.0`, etc.) for backward compatibility  
 
----
+---  
 
 ## 🛠️ Tech Stack  
 - **Backend:** .NET 8, C#, ASP.NET Core Web API  
@@ -28,6 +29,7 @@ NCS Cqrs API is a high-performance **REST API** designed using **CQRS (Command Q
 - **Logging:** Serilog  
 - **Validation:** FluentValidation  
 - **Documentation:** Swashbuckle (Swagger)  
+- **Versioning:** Microsoft.AspNetCore.Mvc.Versioning  
 
 ---
 
@@ -67,7 +69,90 @@ http://localhost:5000/swagger
 ```
 
 ---
+# 📌 API Versioning  
 
+NCS Cqrs API supports **multiple API versions** to ensure backward compatibility while allowing new features to be added without breaking existing functionality.  
+
+### ✅ **Versioning Strategies Used**  
+- **URL Path Versioning** → `/api/v1/orders`, `/api/v2/orders`  
+- **Query String Versioning** → `/api/orders?api-version=1.0`  
+- **Header Versioning** → `X-API-Version: 1.0`  
+
+### 🛠 **How API Versioning is Implemented**  
+The API uses `Microsoft.AspNetCore.Mvc.Versioning` to manage multiple versions.  
+
+#### **1️⃣ Versioned API Controllers**  
+Each API controller has a version assigned to it:  
+
+##### **OrdersController (Version 1.0)**
+```csharp
+[ApiController]
+[Route("api/v{version:apiVersion}/orders")]
+[ApiVersion("1.0")]
+public class OrdersController : BaseApiController
+{
+    [HttpGet]
+    public IActionResult GetOrders()
+    {
+        return Ok(new { Message = "Orders from v1 API" });
+    }
+}
+```
+
+##### **OrdersController (Version 2.0 - New Features)**
+```csharp
+[ApiController]
+[Route("api/v{version:apiVersion}/orders")]
+[ApiVersion("2.0")]
+public class OrdersV2Controller : BaseApiController
+{
+    [HttpGet]
+    public IActionResult GetOrders()
+    {
+        return Ok(new { Message = "Orders from v2 API - New Features!" });
+    }
+}
+```
+
+#### **2️⃣ Calling Different API Versions**  
+| **Versioning Method** | **Example Request** |
+|-------------------|---------------------------------|
+| **URL Versioning** | `GET /api/v1/orders` |
+| **Query String Versioning** | `GET /api/orders?api-version=1.0` |
+| **Header Versioning** | `X-API-Version: 1.0` |
+
+---
+
+## 🔄 **Deprecating an API Version**  
+Older API versions can be marked as **deprecated** to notify clients:  
+
+```csharp
+[ApiVersion("1.0", Deprecated = true)]
+```
+Clients will receive a warning indicating that **v1.0 is deprecated**.
+
+---
+
+## 🚀 How to Test API Versioning  
+1️⃣ **Start the API:**  
+```sh
+dotnet run --project Ncs.Cqrs.Api
+```
+2️⃣ **Test versioned endpoints using URL:**  
+```sh
+curl -X GET "http://localhost:5000/api/v1/orders"
+curl -X GET "http://localhost:5000/api/v2/orders"
+```
+3️⃣ **Test using Query String Versioning:**  
+```sh
+curl -X GET "http://localhost:5000/api/orders?api-version=1.0"
+```
+4️⃣ **Test using Header Versioning:**  
+```sh
+curl -X GET "http://localhost:5000/api/orders" -H "X-API-Version: 1.0"
+```
+
+---
 # 🛠️ Error Handling in NCS Cqrs API
 
 NCS Cqrs API implements a **centralized error handling mechanism** to ensure consistency and maintainability. This architecture ensures that all errors are **caught, logged, and returned with a structured response format**.

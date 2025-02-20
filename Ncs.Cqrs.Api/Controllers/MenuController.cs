@@ -9,7 +9,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Ncs.Cqrs.Api.Controllers
 {
-    [Route("api/menu-items")]
+    [ApiController]
+    [Route("api/v{version:apiVersion}/menu-items")]
+    [ApiVersion("1.0")]
     public class MenuController : BaseApiController
     {
         private readonly IMediator _mediator;
