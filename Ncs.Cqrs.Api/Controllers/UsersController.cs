@@ -9,7 +9,9 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace Ncs.Cqrs.Api.Controllers
 {
-    [Route("api/users")]
+    [ApiController]
+    [Route("api/v{version:apiVersion}/users")]
+    [ApiVersion("1.0")]
     public class UsersController : BaseApiController
     {
         private readonly IMediator _mediator;

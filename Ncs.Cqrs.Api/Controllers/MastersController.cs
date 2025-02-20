@@ -7,7 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Ncs.Cqrs.Api.Controllers
 {
-    [Route("api/masters")]
+    [ApiController]
+    [Route("api/v{version:apiVersion}/masters")]
+    [ApiVersion("1.0")]
     public class MastersController : BaseApiController
     {
         private readonly IMediator _mediator;

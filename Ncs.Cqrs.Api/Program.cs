@@ -19,6 +19,8 @@ using System.Text;
 using System.Text.Json.Serialization;
 using Serilog;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc.Versioning;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -131,20 +133,45 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+// 🔹 Add API Versioning
+builder.Services.AddApiVersioning(options =>
+{
+    options.ReportApiVersions = true;
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.ApiVersionReader = ApiVersionReader.Combine(
+        new UrlSegmentApiVersionReader(),      // /api/v1/orders
+        new QueryStringApiVersionReader("api-version"),  // ?api-version=1.0
+        new HeaderApiVersionReader("X-API-Version")  // Header: X-API-Version: 1.0
+    );
+});
+
+// 🔹 Configure API Explorer for Swagger
+builder.Services.AddVersionedApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+
 // 🔹 Configure Swagger with Bearer Authentication
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo
+    var provider = builder.Services.BuildServiceProvider().GetRequiredService<IApiVersionDescriptionProvider>();
+    foreach (var description in provider.ApiVersionDescriptions)
     {
-        Title = "Backend Canteen API",
-        Version = "v1",
-        Description = "API documentation for Canteen Application",
-        Contact = new OpenApiContact
+        c.SwaggerDoc(description.GroupName, new OpenApiInfo
         {
-            Name = "BSI Support",
-            Email = "bsi-support@example.com"
-        }
-    });
+            Title = $"Ncs.Cqrs API {description.ApiVersion}",
+            Version = description.ApiVersion.ToString(),
+            Description = "API documentation for Canteen Application",
+            Contact = new OpenApiContact
+            {
+                Name = "NCS Support",
+                Email = "ncs-support@gmail.com"
+            }
+        });
+    }
 
     // ✅ Enable Bearer Token in Swagger
     var securityScheme = new OpenApiSecurityScheme
@@ -211,6 +238,8 @@ builder.Services.AddCors(options =>
     });
 });
 
+
+
 // 🔹 Build Application
 var app = builder.Build();
 
@@ -224,11 +253,15 @@ app.UseSerilogRequestLogging(); // Log requests
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Canteen API v1");
-        c.DisplayRequestDuration();
-    });
+    app.UseSwaggerUI(options =>
+        {
+            var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+
+            foreach (var description in provider.ApiVersionDescriptions)
+            {
+                options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());
+            }
+        });
 }
 
 app.MapControllers();
