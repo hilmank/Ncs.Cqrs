@@ -84,6 +84,7 @@ builder.Services.AddScoped<IMenuRepository, MenuRepository>();
 builder.Services.AddScoped<IMenuSchedulesRepository, MenuSchedulesRepository>();
 builder.Services.AddScoped<IReservationsRepository, ReservationsRepository>();
 builder.Services.AddScoped<IOrdersRepository, OrdersRepository>();
+builder.Services.AddScoped<IReportService, ReportService>();
 
 // ✅ Controllers & JSON Serialization
 builder.Services.AddControllers()

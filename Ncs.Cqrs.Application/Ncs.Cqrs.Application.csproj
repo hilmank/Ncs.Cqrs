@@ -20,4 +20,8 @@
     <ProjectReference Include="..\Ncs.Cqrs.Domain\Ncs.Cqrs.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Features\Reports\Validators\" />
+  </ItemGroup>
+
 </Project>

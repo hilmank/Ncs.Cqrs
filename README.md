@@ -153,3 +153,27 @@ The API follows a **layered architecture** to handle errors efficiently:
 - **Sensitive data is never logged** ✅
 - **Predefined error codes improve API debugging** ✅
 
+# 🔒 Reports & Exporting
+
+NCS Cqrs API provides **reporting capabilities** using **NPOI** to generate Excel reports for **orders, payments, and stock management**.
+
+## 📈 Available Reports
+- **Order Reports** – Export user meal reservations and order status.
+- **Payment Reports** – Generate payroll deductions for meal payments.
+- **Stock Reports** – Track daily stock levels and consumption.
+
+## 📑 Generating Reports
+Reports can be generated using the `/api/reports/export` endpoint. The format is as follows:
+
+### **🔹 Request:**
+```http
+GET /api/reports/export?reportType=orders&startDate=2024-01-01&endDate=2024-01-31
+```
+
+### **🔹 Response:** (Excel File)
+The API returns an **Excel file** containing the requested report. The file is dynamically generated based on **real-time** data.
+
+## 🔒 Security & Access Control
+- Only **authenticated admins** can generate reports.
+- Reports are **not cached** to ensure real-time accuracy.
+

@@ -25,4 +25,9 @@
     <ProjectReference Include="..\Ncs.Cqrs.Infrastructure\Ncs.Cqrs.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+      <None Update="Templates\OrderReportTemplate.xlsx">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+  </ItemGroup>
 </Project>
