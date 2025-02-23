@@ -23,52 +23,86 @@ namespace Ncs.Cqrs.Infrastructure.Persistence
             SELECT 
                 {OrdersQueries.AllColumns},
                 {UsersQueries.AllColumns.Replace("users.", "users_order.")},
+                {CompaniesQueries.AllColumns},
                 {MenuItemsQueries.AllColumns},
                 {ReservationsQueries.AllColumns},
-                {ReservationsStatusQueries.AllColumns},
-                {ReservationGuestsQueries.AllColumns},
-                {MenuItemsQueries.AllColumns.Replace("menu_items.", "guests_menu_items.")}
+                {ReservationsStatusQueries.AllColumns}
             FROM orders
             JOIN users AS users_order ON orders.user_id = users_order.id
+            LEFT JOIN companies ON users_order.company_id = companies.id
             JOIN menu_items ON orders.menu_items_id = menu_items.id
             LEFT JOIN reservations ON orders.reservations_id = reservations.id
             LEFT JOIN reservations_status ON reservations.status_id = reservations_status.id
-            LEFT JOIN reservation_guests ON orders.reservation_guests_id = reservation_guests.id
+        ";
+
+        // 🔹 Second Query: Fetch Reservation Guests & Guest Menu Items separately
+        private readonly string SqlGuests = $@"
+            SELECT 
+                {ReservationGuestsQueries.AllColumns},
+                {MenuItemsQueries.AllColumns.Replace("menu_items.", "guests_menu_items.")}
+            FROM reservation_guests
             LEFT JOIN menu_items AS guests_menu_items ON reservation_guests.menu_items_id = guests_menu_items.id
+            WHERE reservation_guests.reservations_id IN @ReservationIds
         ";
 
         private async Task<IEnumerable<Orders>> GetOrdersAsync(string sql, object? parameters = null)
         {
             var resultDictionary = new Dictionary<int, Orders>();
 
-            return await _connection.QueryAsync<Orders, Users, MenuItems, Reservations, ReservationsStatus, ReservationGuests, MenuItems, Orders>(
+            // 🔹 First Query Execution (Orders + Main Related Entities)
+            var orders = await _connection.QueryAsync<Orders, Users, Companies, MenuItems, Reservations, ReservationsStatus, Orders>(
                 sql,
-                (order, usersOrder, menuItem, reservation, reservationsStatus, reservationGuest, guestMenuItem) =>
+                (order, usersOrder, company, menuItem, reservation, reservationsStatus) =>
                 {
                     if (!resultDictionary.TryGetValue(order.Id, out var existingOrder))
                     {
                         existingOrder = order;
                         existingOrder.UserOrder = usersOrder;
+                        existingOrder.UserOrder.Company = company;
                         existingOrder.MenuItem = menuItem;
                         existingOrder.Reservation = reservation;
+
                         if (reservation is not null)
                         {
-                            if (order.ReservationGuestsId is not null)
-                            {
-                                existingOrder.Reservation.Status = reservationsStatus;
-                                existingOrder.ReservationGuests = reservationGuest;
-                                existingOrder.ReservationGuests.MenuItem = guestMenuItem;
-                            }
+                            existingOrder.Reservation.Status = reservationsStatus;
                         }
+
                         resultDictionary[order.Id] = existingOrder;
                     }
                     return existingOrder;
                 },
                 parameters,
-                splitOn: "Id,Id,Id,Id,Id,Id,Id"
+                splitOn: "id,id,id,id,id,id"
             );
-        }
 
+            // Convert IEnumerable<int?> to int[] explicitly
+            var reservationIds = resultDictionary.Values
+                .Where(o => o.ReservationsId.HasValue)
+                .Select(o => o.ReservationsId.Value) // Ensure conversion from nullable int to int
+                .Distinct()
+                .ToArray();
+
+            if (reservationIds.Length > 0)
+            {
+                var guestOrders = await _connection.QueryAsync<ReservationGuests, MenuItems, ReservationGuests>(
+                    SqlGuests,
+                    (reservationGuest, guestMenuItem) =>
+                    {
+                        if (resultDictionary.TryGetValue(reservationGuest.ReservationsId, out var existingOrder))
+                        {
+                            existingOrder.ReservationGuests = reservationGuest;
+                            existingOrder.ReservationGuests.MenuItem = guestMenuItem;
+                        }
+                        return reservationGuest;
+                    },
+                    new { ReservationIds = reservationIds },
+                    splitOn: "id,id"
+                );
+            }
+
+
+            return resultDictionary.Values;
+        }
         public void SetTransaction(IDbTransaction transaction)
         {
             _transaction = transaction;
