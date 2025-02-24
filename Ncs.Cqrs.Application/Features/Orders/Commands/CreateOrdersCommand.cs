@@ -52,6 +52,15 @@ namespace Ncs.Cqrs.Application.Features.Orders.Commands
             {
                 return ResponseDto<bool>.ErrorResponse(ErrorCodes.NotFound, "Menu item not found.");
             }
+            //check if order by reservations
+            int? reservationId = null;
+            var reservations = await _unitOfWork.Reservations.GetAllReservationsByDateAsync(DateTime.Now.Date, DateTime.Now.Date);
+            if (reservations.Count != 0)
+            {
+                var reservation = reservations.Where(x => x.ReservedBy == parsedUserId).FirstOrDefault();
+                if (reservation != null)
+                    reservationId = reservation.Id;
+            }
             orders.Add(new Domain.Entities.Orders
             {
                 UserId = parsedUserId,
@@ -64,6 +73,7 @@ namespace Ncs.Cqrs.Application.Features.Orders.Commands
                 Price = menuItem.Price,
                 CreatedBy = parsedUserId,
                 CreatedAt = DateTime.Now,
+                ReservationsId = reservationId
             });
             if (request.ReservationGuestsIds != null)
             {
@@ -85,7 +95,8 @@ namespace Ncs.Cqrs.Application.Features.Orders.Commands
                         Price = menuItem.Price,
                         CreatedBy = parsedUserId,
                         CreatedAt = DateTime.Now,
-                        ReservationGuestsId = request.ReservationGuestsIds[i]
+                        ReservationGuestsId = request.ReservationGuestsIds[i],
+                        ReservationsId = reservationId
                     });
                 }
             }

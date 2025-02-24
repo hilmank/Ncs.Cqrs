@@ -42,7 +42,7 @@ namespace Ncs.Cqrs.Infrastructure.Persistence
                 {MenuItemsQueries.AllColumns.Replace("menu_items.", "guests_menu_items.")}
             FROM reservation_guests
             LEFT JOIN menu_items AS guests_menu_items ON reservation_guests.menu_items_id = guests_menu_items.id
-            WHERE reservation_guests.reservations_id IN @ReservationIds
+            WHERE reservation_guests.reservations_id = ANY(@ReservationIds)
         ";
 
         private async Task<IEnumerable<Orders>> GetOrdersAsync(string sql, object? parameters = null)
@@ -88,10 +88,14 @@ namespace Ncs.Cqrs.Infrastructure.Persistence
                     SqlGuests,
                     (reservationGuest, guestMenuItem) =>
                     {
-                        if (resultDictionary.TryGetValue(reservationGuest.ReservationsId, out var existingOrder))
+                        foreach (var order in resultDictionary.Values.Where(o => o.ReservationsId.HasValue && o.ReservationGuestsId.HasValue))
                         {
-                            existingOrder.ReservationGuests = reservationGuest;
-                            existingOrder.ReservationGuests.MenuItem = guestMenuItem;
+                            if (reservationGuest.ReservationsId == order.ReservationsId && reservationGuest.Id == order.ReservationGuestsId)
+                            {
+                                order.ReservationGuests ??= new ReservationGuests(); // Ensure initialization
+                                order.ReservationGuests = reservationGuest;
+                                order.ReservationGuests.MenuItem = guestMenuItem;
+                            }
                         }
                         return reservationGuest;
                     },
@@ -99,7 +103,6 @@ namespace Ncs.Cqrs.Infrastructure.Persistence
                     splitOn: "id,id"
                 );
             }
-
 
             return resultDictionary.Values;
         }
