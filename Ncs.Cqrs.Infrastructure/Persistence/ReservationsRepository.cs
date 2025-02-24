@@ -258,7 +258,9 @@ public class ReservationsRepository : IReservationsRepository
     }
     public async Task<ReservationGuests?> GetReservationGuestsByidAsync(int reservationGuestsId)
     {
-        var sql = "SELECT * FROM reservation_guests WHERE id = @Id";
+        var sql = $@"SELECT 
+            {ReservationGuestsQueries.AllColumns}
+            FROM reservation_guests WHERE id = @Id";
         return await _connection.QuerySingleOrDefaultAsync<ReservationGuests>(sql, new { Id = reservationGuestsId });
     }
 }
