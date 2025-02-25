@@ -120,6 +120,30 @@ namespace Ncs.Cqrs.Api.Controllers
                 $"Error completing order with ID {id}"
             );
 
+        [HttpPut("inprocess-array")]
+        [SwaggerOperation(Summary = "Confirm multiple orders", Description = "Sets the order status to 'InProcess' for multiple orders.")]
+        public async Task<ActionResult<ResponseDto<bool>>> ProcessOrders([FromBody] List<int> ids)
+            => await HandleRequestAsync(
+                async () => await _mediator.Send(new ChangeOrdersStatussCommand { Ids = ids, Status = OrderStatus.InProcess.ToString() }),
+                $"Error processing orders with IDs {string.Join(", ", ids)}"
+            );
+
+        [HttpPut("cancel-array")]
+        [SwaggerOperation(Summary = "Cancel multiple orders", Description = "Sets the order status to 'Canceled' for multiple orders.")]
+        public async Task<ActionResult<ResponseDto<bool>>> CancelOrders([FromBody] List<int> ids)
+            => await HandleRequestAsync(
+                async () => await _mediator.Send(new ChangeOrdersStatussCommand { Ids = ids, Status = OrderStatus.Canceled.ToString() }),
+                $"Error canceling orders with IDs {string.Join(", ", ids)}"
+            );
+
+        [HttpPut("complete-array")]
+        [SwaggerOperation(Summary = "Complete multiple orders", Description = "Sets the order status to 'Completed' for multiple orders.")]
+        public async Task<ActionResult<ResponseDto<bool>>> CompleteOrders([FromBody] List<int> ids)
+            => await HandleRequestAsync(
+                async () => await _mediator.Send(new ChangeOrdersStatussCommand { Ids = ids, Status = OrderStatus.Completed.ToString() }),
+                $"Error completing orders with IDs {string.Join(", ", ids)}"
+            );
+
         [HttpGet("menu/daily")]
         [SwaggerOperation(Summary = "Get daily menu schedules", Description = "Retrieves all menu schedules for current day.")]
         [AllowAnonymous]
