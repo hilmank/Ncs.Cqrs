@@ -45,7 +45,7 @@ public class ChangeOrdersStatusCommandHandler(
 
         existingOrders.OrderStatus = request.Status;
         existingOrders.UpdatedBy = int.Parse(userId);
-        existingOrders.UpdatedAt = DateTime.UtcNow;
+        existingOrders.UpdatedAt = DateTime.Now;
 
         var result = await _unitOfWork.Orders.UpdateOrderAsync(existingOrders);
         if (!result)

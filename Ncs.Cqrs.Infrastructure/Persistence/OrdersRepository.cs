@@ -78,7 +78,7 @@ namespace Ncs.Cqrs.Infrastructure.Persistence
             // Convert IEnumerable<int?> to int[] explicitly
             var reservationIds = resultDictionary.Values
                 .Where(o => o.ReservationsId.HasValue)
-                .Select(o => o.ReservationsId.Value) // Ensure conversion from nullable int to int
+                .Select(o => o.ReservationsId ?? 0) // Ensure conversion from nullable int to int
                 .Distinct()
                 .ToArray();
 
@@ -127,6 +127,16 @@ namespace Ncs.Cqrs.Infrastructure.Persistence
             var result = await GetOrdersAsync(sql, new { OrderId = orderId });
             return result.FirstOrDefault();
 
+        }
+        public async Task<IEnumerable<Orders>> GetOrdersByIdsAsync(List<int> ids)
+        {
+            if (ids == null || !ids.Any())
+                return new List<Orders>();
+
+            var sql = $@"
+                {BaseQuery}
+                WHERE orders.id = ANY(@Ids)";
+            return await GetOrdersAsync(sql, new { Ids = ids });
         }
         public async Task<IEnumerable<Orders>> GetOrdersByUserIdAsync(int userId)
         {
@@ -209,6 +219,68 @@ namespace Ncs.Cqrs.Infrastructure.Persistence
                 _connection.Close();
             }
         }
+        public async Task<bool> UpdateOrdersAsync(List<Orders> orders)
+        {
+            if (_connection.State != ConnectionState.Open)
+                _connection.Open();
+
+            using var transaction = _connection.BeginTransaction();
+            try
+            {
+                var sql = @"
+                    UPDATE orders SET 
+                    user_id = @UserId, 
+                    reservation_guests_id = @ReservationGuestsId, 
+                    menu_items_id = @MenuItemsId, 
+                    is_spicy = @IsSpicy, 
+                    reservations_id = @ReservationsId, 
+                    order_type = @OrderType, 
+                    order_status = @OrderStatus, 
+                    order_date = @OrderDate, 
+                    quantity = @Quantity, 
+                    price = @Price, 
+                    created_at = @CreatedAt, 
+                    created_by = @CreatedBy, 
+                    updated_at = @UpdatedAt, 
+                    updated_by = @UpdatedBy 
+                    WHERE id = @Id;
+                    ";
+
+                foreach (var order in orders)
+                {
+                    // Execute the order update
+                    await _connection.ExecuteAsync(sql, order, transaction);
+
+                    // If order status is Completed, update menu_schedules
+                    if (order.OrderStatus == OrderStatus.Completed.ToString())
+                    {
+                        var updateMenuSql = @"
+                            UPDATE menu_schedules SET 
+                            available_quantity = available_quantity - 1
+                            WHERE menu_items_id = @MenuItemsId
+                            AND schedule_date = @OrderDate;
+                            ";
+
+                        await _connection.ExecuteAsync(updateMenuSql,
+                            new { MenuItemsId = order.MenuItemsId, OrderDate = order.OrderDate.Date }, transaction);
+                    }
+                }
+
+                transaction.Commit();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                _logger.LogError(ex, "Failed to update orders");
+                return false;
+            }
+            finally
+            {
+                _connection.Close();
+            }
+        }
+
         public async Task<bool> DeleteOrderAsync(int orderId)
         {
             var sql = @"DELETE FROM orders WHERE id = @Id;";
