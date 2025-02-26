@@ -18,6 +18,9 @@ namespace Ncs.Cqrs.Domain.Entities
         [Column("password_hash")]
         public string PasswordHash { get; set; }
 
+        [Column("refresh_token")]
+        public string RefreshToken { get; set; }
+
         [Required]
         [Column("firstname")]
         public string Firstname { get; set; }
@@ -66,9 +69,12 @@ namespace Ncs.Cqrs.Domain.Entities
         [Column("is_deleted")]
         public bool IsDeleted { get; set; }
 
-        [Required]
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
+
+        [Required]
+        [Column("last_login")]
+        public DateTime LastLogin { get; set; }
 
         [Required]
         [Column("created_by")]

@@ -141,7 +141,14 @@ namespace Ncs.Cqrs.Infrastructure.Persistence
             }
             return await QueryUsersAsync(sql.ToString(), parameters);
         }
-
+        public async Task<Users?> GetUsersByRefreshToken(string refreshToken)
+        {
+            var sql = $@"
+                {BaseQuery}
+                WHERE users.refresh_token = @Value";
+            var users = await QueryUsersAsync(sql, new { Value = refreshToken });
+            return users.FirstOrDefault();
+        }
         public async Task<bool> AddUsersAsync(Users user)
         {
             if (_connection.State != ConnectionState.Open)

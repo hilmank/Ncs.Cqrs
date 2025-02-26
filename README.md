@@ -262,3 +262,205 @@ The API returns an **Excel file** containing the requested report. The file is d
 - Only **authenticated admins** can generate reports.
 - Reports are **not cached** to ensure real-time accuracy.
 
+### **🔒 Security in NCS Cqrs API**
+
+NCS Cqrs API is built with **security-first principles**, ensuring **secure authentication, authorization, and data protection**. The system leverages **CORS policies**, **JWT-based authentication**, and **secure token management** to protect API endpoints.
+
+---
+
+## **1️⃣ CORS (Cross-Origin Resource Sharing)**
+**CORS (Cross-Origin Resource Sharing)** is a security mechanism that **controls which domains can access the API**. By default, web browsers enforce CORS policies to prevent **cross-site request forgery (CSRF) attacks**.
+
+### **🔹 CORS Configuration in NCS Cqrs API**
+To allow **specific frontend applications** to access the API securely, CORS is configured in `Program.cs`:
+
+```csharp
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigins",
+        builder => builder.WithOrigins("https://your-frontend.com")
+                          .AllowAnyMethod()
+                          .AllowAnyHeader()
+                          .AllowCredentials());
+});
+```
+
+✅ **Only `https://your-frontend.com` can make requests**  
+✅ **Supports all HTTP methods (`GET`, `POST`, `PUT`, `DELETE`)**  
+✅ **Ensures cookies and authentication headers are included**  
+
+### **🔹 Enabling CORS in the Middleware**
+```csharp
+app.UseCors("AllowSpecificOrigins");
+```
+
+---
+
+## **2️⃣ Authentication: JWT Token-Based Security**
+NCS Cqrs API uses **JSON Web Tokens (JWT)** for **authentication**. Every request must include a valid **Access Token** in the `Authorization` header.
+
+### **🔹 How JWT Authentication Works**
+1. **User logs in** → Receives an `access_token` and `refresh_token`
+2. **User makes API requests** → Includes `access_token` in `Authorization` header
+3. **API verifies token** → Grants or denies access
+4. **If token expires** → User must **refresh** the token using `refresh_token`
+5. **Refresh Token Rotates** → Ensures long-term security
+
+### **🔹 JWT Token Configuration in `appsettings.json`**
+```json
+{
+  "JwtSettings": {
+    "Secret": "super_secure_key_change_this",
+    "Issuer": "https://your-api.com",
+    "Audience": "https://your-frontend.com",
+    "AccessTokenExpirationMinutes": 15,
+    "RefreshTokenExpirationDays": 7
+  }
+}
+```
+
+### **🔹 Securing API Endpoints with JWT**
+By default, API controllers require **JWT authentication**:
+
+```csharp
+[Authorize]
+[ApiController]
+[Route("api/orders")]
+public class OrdersController : ControllerBase
+{
+    [HttpGet]
+    public IActionResult GetOrders()
+    {
+        return Ok(new { Message = "Secure Orders Data" });
+    }
+}
+```
+✅ **Only authenticated users can access this endpoint**  
+✅ **Unauthorized requests receive `401 Unauthorized` error**  
+
+---
+
+## **3️⃣ JWT Token Lifecycle**
+### **📌 Access Token**
+- Short-lived (expires in **15 minutes** by default)
+- Used for **API authorization**
+- Included in **every request** in the `Authorization` header:
+
+```http
+Authorization: Bearer <access_token>
+```
+
+### **📌 Refresh Token**
+- Long-lived (expires in **7 days** by default)
+- Used to **request a new access token** without re-login
+- Stored securely in **database (`users.refresh_token`)**
+
+#### **🔹 Refresh Token Flow**
+1. **Access token expires** (`401 Unauthorized`)
+2. **Client sends refresh token** → Calls `/api/auth/refresh-token`
+3. **API verifies refresh token** → Issues a **new access token**
+4. **Refresh token rotates** (old one is invalidated)
+
+---
+
+## **4️⃣ Refresh Token Endpoint**
+📄 **`AuthController.cs`**
+```csharp
+[HttpPost("refresh-token")]
+[AllowAnonymous]
+public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenCommand command)
+{
+    var response = await _mediator.Send(command);
+    return Ok(response);
+}
+```
+
+✅ **Prevents forced logouts by using refresh tokens**  
+✅ **Enhances security with token rotation**  
+
+### **🔹 Example API Calls**
+#### **🔹 1️⃣ Login (Receive Tokens)**
+```http
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "usernameOrEmail": "admin@company.com",
+  "password": "SecurePass123"
+}
+```
+✅ **Response (Contains `access_token` and `refresh_token`)**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1Ni...",
+  "refreshToken": "i2Kx89YHsaF...",
+  "expiresIn": 15
+}
+```
+
+#### **🔹 2️⃣ Access Protected Resource**
+```http
+GET /api/orders
+Authorization: Bearer <access_token>
+```
+
+#### **🔹 3️⃣ Refresh Expired Token**
+```http
+POST /api/auth/refresh-token
+Content-Type: application/json
+
+{
+  "accessToken": "<expired_access_token>",
+  "refreshToken": "<valid_refresh_token>"
+}
+```
+✅ **Response (New Tokens)**
+```json
+{
+  "token": "new_jwt_access_token",
+  "refreshToken": "new_refresh_token",
+  "expiresIn": 15
+}
+```
+
+---
+
+## **5️⃣ Securing API with Role-Based Authorization**
+NCS Cqrs API enforces **role-based access control (RBAC)** using JWT claims.
+
+📄 **`OrdersController.cs`**
+```csharp
+[Authorize(Roles = "Admin")]
+[HttpPost("create")]
+public IActionResult CreateOrder()
+{
+    return Ok(new { Message = "Order Created Successfully" });
+}
+```
+✅ **Only users with the `Admin` role can create orders**  
+✅ **Other users receive a `403 Forbidden` response**  
+
+---
+
+## **6️⃣ Security Best Practices in NCS Cqrs API**
+✅ **Use HTTPS** – Prevents token interception  
+✅ **Token Expiry & Rotation** – Prevents replay attacks  
+✅ **Store Refresh Tokens in Database** – Prevents reuse attacks  
+✅ **Role-Based Access Control** – Restricts access to authorized users  
+✅ **CORS Policy** – Prevents unauthorized cross-origin requests  
+✅ **Centralized Logging (Serilog)** – Detects suspicious activity  
+
+---
+
+## **🚀 Summary: API Security Features**
+| **Feature** | **Description** |
+|------------|---------------|
+| **CORS Policy** | Prevents unauthorized cross-origin requests |
+| **JWT Access Token** | Short-lived tokens for API authorization |
+| **Refresh Token** | Securely stored, used to obtain new access tokens |
+| **Token Rotation** | Refresh tokens are invalidated after use |
+| **Role-Based Authorization** | Access control using JWT roles |
+| **Secure Password Hashing** | User passwords stored using **PBKDF2** |
+| **HTTPS Enforcement** | Ensures encrypted API communication |
+
+---
