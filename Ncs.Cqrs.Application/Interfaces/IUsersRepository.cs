@@ -15,6 +15,7 @@ namespace Ncs.Cqrs.Application.Interfaces
             bool? isActive = null,
             string? name = null
             );
+        Task<Users?> GetUsersByRefreshToken(string refreshToken);
         Task<bool> AddUsersAsync(Users User);
         Task<bool> UpdateUsersAsync(Users User);
         Task<bool> DeleteUsersAsync(int UserId);

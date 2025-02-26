@@ -58,5 +58,15 @@ namespace Ncs.Cqrs.Api.Controllers
                 async () => await _mediator.Send(request),
                 "Error during RFID login"
             );
+
+        [AllowAnonymous]
+        [HttpPost("refresh-token")]
+        [SwaggerOperation(Summary = "Refreshes the access token using a valid refresh token", Description = "Refreshes the access token using a valid refresh token")]
+        public async Task<ActionResult<ResponseDto<SigninDto>>> RefreshToken([FromBody] RefreshTokenCommand request)
+            => await HandleRequestAsync(
+                async () => await _mediator.Send(request),
+                "Error refresh token"
+            );
+
     }
 }

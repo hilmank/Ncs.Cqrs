@@ -38,11 +38,18 @@ namespace Ncs.Cqrs.Api.Controllers
 
         [HttpGet("{id}")]
         [SwaggerOperation(Summary = "Retrieve a user by ID", Description = "Gets a specific user by ID.")]
-        public async Task<ActionResult<ResponseDto<UsersDto>>> GetUserById(int id)
+        public async Task<ActionResult<ResponseDto<UsersDto>>> GetUserById(int? id)
             => await HandleRequestAsync(
                 async () => await _mediator.Send(new GetUsersByIdQuery { Id = id }),
                 $"Error fetching user with ID {id}"
             );
+        [HttpGet("info")]
+        [SwaggerOperation(Summary = "Retrieve a user Info", Description = "Gets a specific user info.")]
+        public async Task<ActionResult<ResponseDto<UsersDto>>> GetUserInfo()
+        => await HandleRequestAsync(
+            async () => await _mediator.Send(new GetUsersByIdQuery { Id = null }),
+            $"Error fetching user"
+        );
 
         [HttpGet("roles/{roleId}")]
         [SwaggerOperation(Summary = "Retrieve users by role", Description = "Gets users associated with a specific role.")]

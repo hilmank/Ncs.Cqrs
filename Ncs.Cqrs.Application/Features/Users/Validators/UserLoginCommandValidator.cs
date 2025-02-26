@@ -1,10 +1,13 @@
 ﻿using Ncs.Cqrs.Application.Features.Users.Commands;
 using FluentValidation;
+using Ncs.Cqrs.Application.Interfaces;
+using Ncs.Cqrs.Application.Utils;
 
 namespace Ncs.Cqrs.Application.Features.Users.Validators
 {
     public class UserLoginCommandValidator : AbstractValidator<UserLoginCommand>
     {
+
         public UserLoginCommandValidator()
         {
             RuleFor(x => x.UsernameOrEmail)
